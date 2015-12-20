@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">MIDI Player</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Text Sizes -->
+    <string name="h1">50dp</string>
 </resources>

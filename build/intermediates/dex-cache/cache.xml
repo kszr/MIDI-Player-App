@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="5c5699834e9722f1c288fea2de82725d078ba127">
+        <dex dex="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/pre-dexed/debug/com.android.support-appcompat-v7-23.1.1_809893820ac98f42ebe022e2c8a5f3c9bb8b3b1e.jar" />
+    </item>
+    <item
+        jar="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="6cbc7773921fcfedbe55657578f0cbfe614778dc">
+        <dex dex="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/pre-dexed/debug/com.android.support-support-v4-23.1.1_0759e7d659697dcec5df445a1eb512dcad0025fd.jar" />
+    </item>
+    <item
+        jar="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.1.1/jars/libs/internal_impl-23.1.1.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="a4de9c81ae239414e1ed0f86441b02abaf29bca9">
+        <dex dex="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/pre-dexed/debug/internal_impl-23.1.1_6990e5f19960bda5be3088011d880688f2889d94.jar" />
+    </item>
+    <item
+        jar="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/exploded-aar/com.android.support/design/23.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="379471b2bd17d9737c050345c08e8c7d16589784">
+        <dex dex="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/pre-dexed/debug/com.android.support-design-23.1.1_a7902b3bf1b59c68e2fcf33c46468e1e87b422bb.jar" />
+    </item>
+    <item
+        jar="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/23.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="09c5e804bc67fc0580360043dff067df574a60d4">
+        <dex dex="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/pre-dexed/debug/com.android.support-recyclerview-v7-23.1.1_160de4b401e4eeac0ccb2e73ef983e9ce2719fb3.jar" />
+    </item>
+    <item
+        jar="/Users/abhishekchatterjee/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/23.1.1/support-annotations-23.1.1.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="8d680ba5a623724d1fb0e81c36a790f023a6cede">
+        <dex dex="/Users/abhishekchatterjee/AndroidStudioProjects/MIDI-Player-App/app/build/intermediates/pre-dexed/debug/support-annotations-23.1.1_e350468a9dd7b78e6309925a51fe94c8a0a983ac.jar" />
+    </item>
+
+</items>
