@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">MIDI Player</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Button Names -->
+    <string name="button_open">Open</string>
 </resources>
