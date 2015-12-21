@@ -12,11 +12,7 @@
     tools:context="com.kszr.midiplayer.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <!--<TextView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Hello World!" />-->
-
+    <!-- App Title -->
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
@@ -35,57 +31,60 @@
         android:text="@string/button_open"
         android:onClick="openFile" />
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_to_start"
+    <!-- Playback Buttons -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
         android:layout_below="@+id/button_open"
-        android:drawableBottom="@drawable/rewindtostart"
-        style="?android:attr/buttonStyleSmall"
-        android:onClick="" />
+        android:layout_centerHorizontal="true">
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_below="@+id/button_open"
-        android:layout_toRightOf="@+id/button_to_start"
-        android:drawableBottom="@drawable/play"
-        style="?android:attr/buttonStyleSmall"
-        android:onClick="" />
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_to_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:drawableBottom="@drawable/rewindtostart"
+            style="?android:attr/buttonStyleSmall"
+            android:onClick="backToStart" />
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_pause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_below="@+id/button_open"
-        android:layout_toRightOf="@+id/button_play"
-        android:drawableBottom="@drawable/pause"
-        style="?android:attr/buttonStyleSmall"
-        android:onClick="" />
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_toRightOf="@+id/button_to_start"
+            android:drawableBottom="@drawable/play"
+            style="?android:attr/buttonStyleSmall"
+            android:onClick="play" />
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_below="@+id/button_open"
-        android:layout_toRightOf="@+id/button_pause"
-        android:drawableBottom="@drawable/stop"
-        style="?android:attr/buttonStyleSmall"
-        android:onClick="" />
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_toRightOf="@+id/button_play"
+            android:drawableBottom="@drawable/pause"
+            style="?android:attr/buttonStyleSmall"
+            android:onClick="pause" />
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_to_end"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_below="@+id/button_open"
-        android:layout_toRightOf="@+id/button_stop"
-        android:drawableBottom="@drawable/skiptoend"
-        style="?android:attr/buttonStyleSmall"
-        android:onClick="" />
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_toRightOf="@+id/button_pause"
+            android:drawableBottom="@drawable/stop"
+            style="?android:attr/buttonStyleSmall"
+            android:onClick="stop" />
+
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_to_end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_toRightOf="@+id/button_stop"
+            android:drawableBottom="@drawable/skiptoend"
+            style="?android:attr/buttonStyleSmall"
+            android:onClick="forwardToEnd" />
+    </LinearLayout>
 </RelativeLayout>

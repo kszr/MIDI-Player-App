@@ -10,8 +10,10 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import midi.MidiFile;
 
 public class MainActivity extends AppCompatActivity {
+    private MidiFile midiFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +58,60 @@ public class MainActivity extends AppCompatActivity {
         Button button = (Button) findViewById(R.id.button_open);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // Do something in response to button click
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.setType("file/*");
                 startActivity(intent);
+            }
+        });
+    }
+
+    public void backToStart(View view) {
+        Button button = (Button) findViewById(R.id.button_to_start);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Snackbar.make(v, "Back to start", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+    }
+
+    public void play(View view) {
+        Button button = (Button) findViewById(R.id.button_play);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Snackbar.make(v, "Play", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+    }
+
+    public void pause(View view) {
+        Button button = (Button) findViewById(R.id.button_pause);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Snackbar.make(v, "Pause", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+    }
+
+    public void stop(View view) {
+        Button button = (Button) findViewById(R.id.button_stop);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Snackbar.make(v, "Stop", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+    }
+
+    public void forwardToEnd(View view) {
+        Button button = (Button) findViewById(R.id.button_to_end);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Snackbar.make(v, "Forward to end", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
             }
         });
     }
