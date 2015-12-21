@@ -18,9 +18,74 @@
         <!--android:text="Hello World!" />-->
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/title"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:textSize="@dimen/h1"
         android:fontFamily="sans-serif-light"
         android:text="@string/app_name"/>
+
+    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/button_open"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title"
+        android:layout_centerHorizontal="true"
+        android:text="@string/button_open"
+        android:onClick="openFile" />
+
+    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/button_to_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_below="@+id/button_open"
+        android:drawableBottom="@drawable/rewindtostart"
+        style="?android:attr/buttonStyleSmall"
+        android:onClick="" />
+
+    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/button_play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_below="@+id/button_open"
+        android:layout_toRightOf="@+id/button_to_start"
+        android:drawableBottom="@drawable/play"
+        style="?android:attr/buttonStyleSmall"
+        android:onClick="" />
+
+    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/button_pause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_below="@+id/button_open"
+        android:layout_toRightOf="@+id/button_play"
+        android:drawableBottom="@drawable/pause"
+        style="?android:attr/buttonStyleSmall"
+        android:onClick="" />
+
+    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/button_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_below="@+id/button_open"
+        android:layout_toRightOf="@+id/button_pause"
+        android:drawableBottom="@drawable/stop"
+        style="?android:attr/buttonStyleSmall"
+        android:onClick="" />
+
+    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/button_to_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_below="@+id/button_open"
+        android:layout_toRightOf="@+id/button_stop"
+        android:drawableBottom="@drawable/skiptoend"
+        style="?android:attr/buttonStyleSmall"
+        android:onClick="" />
 </RelativeLayout>

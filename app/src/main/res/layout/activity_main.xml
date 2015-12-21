@@ -21,20 +21,7 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <Button xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/button_open"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_open"
-            android:onClick="openFile" />
-    </LinearLayout>
-
+    <!-- Everything is in here for some reason -->
     <include layout="@layout/content_main" />
 
     <android.support.design.widget.FloatingActionButton
