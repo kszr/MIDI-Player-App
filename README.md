@@ -6,3 +6,5 @@ This is very likely going to end up being not just a MIDI player, because Androi
 
 ##External Libraries
 * LeffelMania's [MIDI Library](https://github.com/LeffelMania/android-midi-lib), because Android stopped supporting ```javax.sound.midi``` some years ago.
+
+*Icon made by [Freepik](http://www.freepik.com/) from [www.flaticon.com](www.flaticon.com).*
