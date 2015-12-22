@@ -28,8 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/title"
         android:layout_centerHorizontal="true"
-        android:text="@string/button_open"
-        android:onClick="openFile" />
+        android:text="@string/button_open" />
 
     <!-- Playback Buttons -->
     <LinearLayout
@@ -44,8 +43,7 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
             android:drawableBottom="@drawable/rewindtostart"
-            style="?android:attr/buttonStyleSmall"
-            android:onClick="backToStart" />
+            style="?android:attr/buttonStyleSmall" />
 
         <Button xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/button_play"
@@ -54,8 +52,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_to_start"
             android:drawableBottom="@drawable/play"
-            style="?android:attr/buttonStyleSmall"
-            android:onClick="play" />
+            style="?android:attr/buttonStyleSmall" />
 
         <Button xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/button_pause"
@@ -64,8 +61,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_play"
             android:drawableBottom="@drawable/pause"
-            style="?android:attr/buttonStyleSmall"
-            android:onClick="pause" />
+            style="?android:attr/buttonStyleSmall" />
 
         <Button xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/button_stop"
@@ -74,8 +70,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_pause"
             android:drawableBottom="@drawable/stop"
-            style="?android:attr/buttonStyleSmall"
-            android:onClick="stop" />
+            style="?android:attr/buttonStyleSmall" />
 
         <Button xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/button_to_end"
@@ -84,7 +79,6 @@
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_stop"
             android:drawableBottom="@drawable/skiptoend"
-            style="?android:attr/buttonStyleSmall"
-            android:onClick="forwardToEnd" />
+            style="?android:attr/buttonStyleSmall" />
     </LinearLayout>
 </RelativeLayout>
