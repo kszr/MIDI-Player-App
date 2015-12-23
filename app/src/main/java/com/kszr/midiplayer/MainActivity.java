@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,13 +17,24 @@ import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageButton;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import midi.MidiFile;
+import midi.MidiTrack;
+import midi.event.MidiEvent;
+import midi.event.ProgramChange;
 
 /**
  * The main activity for the app.
  */
 public class MainActivity extends AppCompatActivity {
-    private static final int PICKFILE_RESULT_CODE = 1;
+    private static final int OPEN_FILE_REQUEST_CODE = 1;
+    private static final int CHANGE_PROGRAM_REQUEST_CODE = 2;
 
     private MediaPlayer mediaPlayer = null;
     private MidiFile midiFile = null;
@@ -68,20 +78,34 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == PICKFILE_RESULT_CODE && resultCode == RESULT_OK) {
+        if(requestCode == OPEN_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
             String filepath = data.getData().getPath();
             String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(data.getData()));
             Log.i("Filetype", extension);
             try {
                 if (!extension.equals("mid"))
                     throw new Exception("Not a MIDI file!");
+                midiFile = new MidiFile(getContentResolver().openInputStream(data.getData()));
                 mediaPlayer = new MediaPlayer();
                 mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 mediaPlayer.setDataSource(getApplicationContext(), data.getData());
                 mediaPlayer.prepare();
-                Log.i("INFO", "Opened " + filepath);
+                Log.i("MainActivity", "Opened " + filepath);
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        } else if(requestCode == CHANGE_PROGRAM_REQUEST_CODE && resultCode == RESULT_OK) {
+            String instrument = data.getStringExtra("instrument");
+            int program = data.getIntExtra("program", -1);
+            if(instrument != null && program > 0) {
+                try {
+                    changeProgram(program);
+                    Log.i("MainActivity", "Instrument: " + instrument + ", Program: " + program);
+                } catch(Exception e) {
+                    Log.i("MainActivity", "Error while trying to change program. Program not changed.");
+                }
+            } else {
+                Log.i("MainActivity", "Program not changed");
             }
         }
     }
@@ -109,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
-                startActivityForResult(intent, PICKFILE_RESULT_CODE);
+                startActivityForResult(intent, OPEN_FILE_REQUEST_CODE);
             }
         });
     }
@@ -145,9 +169,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if (mediaPlayer == null)
-                        throw new Exception("No file loaded!");
-                    mediaPlayer.start();
+                    play();
                     Snackbar.make(v, "Playing", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 } catch (Exception e) {
@@ -166,9 +188,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if (mediaPlayer == null)
-                        throw new Exception("No file loaded!");
-                    mediaPlayer.pause();
+                    pause();
                     Snackbar.make(v, "Paused", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 } catch (Exception e) {
@@ -187,11 +207,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if (mediaPlayer == null)
-                        throw new Exception("No file loaded!");
-                    mediaPlayer.seekTo(0);
-                    if (mediaPlayer.isPlaying())
-                        mediaPlayer.pause();
+                    stop();
                     Snackbar.make(v, "Stop", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 } catch (Exception e) {
@@ -231,12 +247,84 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Snackbar.make(v, "Changed program", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
                 Intent intent = new Intent(MainActivity.this, ProgramChangeActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, CHANGE_PROGRAM_REQUEST_CODE);
             }
         });
+    }
+
+    /**
+     * A helper method that starts the media player if it is not running
+     * and pauses otherwise. Essentially the same as pause().
+     * @throws Exception
+     */
+    private void play() throws Exception {
+        if (mediaPlayer == null)
+            throw new Exception("No file loaded!");
+        if(!mediaPlayer.isPlaying())
+            mediaPlayer.start();
+        else mediaPlayer.pause();
+    }
+
+    /**
+     * A helper method that pauses the media player if it is running
+     * and starts it otherwise. Essentially the same as play().
+     * @throws Exception
+     */
+    private void pause() throws Exception {
+        if (mediaPlayer == null)
+            throw new Exception("No file loaded!");
+        if(mediaPlayer.isPlaying())
+            mediaPlayer.pause();
+        else mediaPlayer.start();
+    }
+
+    /**
+     * A helper method that stops playback. It accomplishes this by pausing the
+     * audio at the start of the track or whatever.
+     * @throws Exception
+     */
+    private void stop() throws Exception {
+        if (mediaPlayer == null)
+            throw new Exception("No file loaded!");
+        mediaPlayer.seekTo(0);
+        if (mediaPlayer.isPlaying())
+            mediaPlayer.pause();
+    }
+
+    /**
+     * Changes the instrument of all tracks to that specified by program.
+     * @param program
+     */
+    private void changeProgram(int program) throws Exception {
+        if(mediaPlayer == null)
+            throw new Exception("No file loaded!");
+        boolean wasPlaying = mediaPlayer.isPlaying();
+        if(wasPlaying)
+            pause();
+        int currentPosition = mediaPlayer.getCurrentPosition();
+        ArrayList<MidiTrack> tracks = midiFile.getTracks();
+        ArrayList<MidiTrack> newTracks = new ArrayList<MidiTrack>();
+        for(MidiTrack track : tracks) {
+            MidiTrack tempTrack = new MidiTrack();
+            tempTrack.insertEvent(new ProgramChange(0, 0, program));
+            for(MidiEvent event : track.getEvents()) {
+                tempTrack.insertEvent(event);
+            }
+            newTracks.add(tempTrack);
+        }
+        midiFile = new MidiFile(midiFile.getResolution(), newTracks);
+        mediaPlayer.stop();
+        mediaPlayer.reset();
+        mediaPlayer.release();
+        File tempFile = File.createTempFile(midiFile.toString(), ".mid");
+        midiFile.writeToFile(tempFile);
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setDataSource(new FileInputStream(tempFile).getFD());
+        mediaPlayer.prepare();
+        mediaPlayer.seekTo(currentPosition);
+        if(wasPlaying)
+            play();
     }
 
     /**

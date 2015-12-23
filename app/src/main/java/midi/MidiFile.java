@@ -74,6 +74,12 @@ public class MidiFile
         initFromBuffer(buffer);
 
         mTracks = new ArrayList<MidiTrack>();
+
+        /**
+         * INFO courtesy of abhishekchatterjee:
+         * mTrackCount is being set inside initFromBuffer(buffer),
+         * so don't panic.
+         */
         for(int i = 0; i < mTrackCount; i++)
         {
             mTracks.add(new MidiTrack(in));
