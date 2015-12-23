@@ -1,7 +1,16 @@
 <resources>
     <string name="app_name">MIDI Player</string>
+    <string name="program_change_activity">Change Program</string>
     <string name="action_settings">Settings</string>
 
-    <!-- Button Names -->
+    <!-- Button Text -->
     <string name="button_open">Open</string>
+    <string name="button_program">Change Program</string>
+
+    <!-- Content descriptions for ImageButtons -->
+    <string name="button_back_to_start_description">Go back to the start of the track</string>
+    <string name="button_play_description">Start or resume playback</string>
+    <string name="button_pause_description">Pause playback</string>
+    <string name="button_stop_description">Stop playback</string>
+    <string name="button_forward_to_end_description">Go to the end of the track</string>
 </resources>

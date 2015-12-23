@@ -15,6 +15,8 @@
     <!-- App Title -->
     <TextView
         android:id="@+id/title"
+        android:paddingTop="@dimen/padding"
+        android:paddingBottom="@dimen/padding"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -22,63 +24,101 @@
         android:fontFamily="sans-serif-light"
         android:text="@string/app_name"/>
 
-    <Button xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/button_open"
+    <!-- So far just the open button -->
+    <LinearLayout
+        android:id="@+id/text_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/title"
         android:layout_centerHorizontal="true"
-        android:text="@string/button_open" />
+        android:layout_below="@+id/title">
+
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_open" />
+
+    </LinearLayout>
 
     <!-- Playback Buttons -->
     <LinearLayout
+        android:id="@+id/playback_buttons"
+        android:paddingTop="@dimen/padding_small"
+        android:paddingBottom="@dimen/padding_small"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button_open"
+        android:layout_below="@+id/text_buttons"
         android:layout_centerHorizontal="true">
 
-        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+            android:contentDescription="@string/button_back_to_start_description"
             android:id="@+id/button_to_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
-            android:drawableBottom="@drawable/rewindtostart"
+            android:src="@drawable/rewindtostart"
             style="?android:attr/buttonStyleSmall" />
 
-        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+            android:contentDescription="@string/button_play_description"
             android:id="@+id/button_play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_to_start"
-            android:drawableBottom="@drawable/play"
+            android:src="@drawable/play"
             style="?android:attr/buttonStyleSmall" />
 
-        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+            android:contentDescription="@string/button_pause_description"
             android:id="@+id/button_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_play"
-            android:drawableBottom="@drawable/pause"
+            android:src="@drawable/pause"
             style="?android:attr/buttonStyleSmall" />
 
-        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+            android:contentDescription="@string/button_stop_description"
             android:id="@+id/button_stop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_pause"
-            android:drawableBottom="@drawable/stop"
+            android:src="@drawable/stop"
             style="?android:attr/buttonStyleSmall" />
 
-        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+        <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+            android:contentDescription="@string/button_forward_to_end_description"
             android:id="@+id/button_to_end"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
             android:layout_toRightOf="@+id/button_stop"
-            android:drawableBottom="@drawable/skiptoend"
+            android:src="@drawable/skiptoend"
             style="?android:attr/buttonStyleSmall" />
+
     </LinearLayout>
+
+    <!-- Miscellaneous Buttons -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/playback_buttons"
+        android:layout_centerHorizontal="true">
+
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/button_program"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_program" />
+
+    </LinearLayout>
+
 </RelativeLayout>

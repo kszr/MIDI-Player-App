@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -17,13 +16,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import android.widget.ImageButton;
 
 import midi.MidiFile;
-import midi.util.MidiProcessor;
 
 /**
  * The main activity for the app.
@@ -45,11 +40,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
         verifyStoragePermissions();
-
-        setSupportActionBar(toolbar);
         setUpButtonListeners();
     }
 
@@ -95,15 +86,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onStop() {
-//        if(mediaPlayer != null) {
-//            mediaPlayer.release();
-//            mediaPlayer = null;
-//        }
-        super.onStop();
-    }
-
     /**
      * Set up listeners for all the buttons.
      */
@@ -114,8 +96,12 @@ public class MainActivity extends AppCompatActivity {
         setUpPauseListener();
         setUpStopListener();
         setUpForwardToEndListener();
+        setUpChangeProgramListener();
     }
 
+    /**
+     * Sets up a listener for the "Open" button.
+     */
     private void setUpFileOpenListener() {
         Button button = (Button) findViewById(R.id.button_open);
         button.setOnClickListener(new View.OnClickListener() {
@@ -128,19 +114,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Sets up a listener for the "Skip to Start" button.
+     */
     private void setUpBackToStartListener() {
-        Button button = (Button) findViewById(R.id.button_to_start);
+        ImageButton button = (ImageButton) findViewById(R.id.button_to_start);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(mediaPlayer == null)
+                    if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(0);
                     Snackbar.make(v, "Back to start", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                     Snackbar.make(v, "Playing", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
@@ -148,17 +137,20 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Sets up a listener for the "Play" button.
+     */
     private void setUpPlayListener() {
-        Button button = (Button) findViewById(R.id.button_play);
+        ImageButton button = (ImageButton) findViewById(R.id.button_play);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(mediaPlayer == null)
+                    if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.start();
                     Snackbar.make(v, "Playing", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
@@ -166,17 +158,20 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Sets up a listener for the "Pause" button.
+     */
     private void setUpPauseListener() {
-        Button button = (Button) findViewById(R.id.button_pause);
+        ImageButton button = (ImageButton) findViewById(R.id.button_pause);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(mediaPlayer == null)
+                    if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.pause();
                     Snackbar.make(v, "Paused", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
@@ -184,19 +179,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Sets up a listener for the "Stop" button.
+     */
     private void setUpStopListener() {
-        Button button = (Button) findViewById(R.id.button_stop);
+        ImageButton button = (ImageButton) findViewById(R.id.button_stop);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(mediaPlayer == null)
+                    if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(0);
-                    if(mediaPlayer.isPlaying())
+                    if (mediaPlayer.isPlaying())
                         mediaPlayer.pause();
                     Snackbar.make(v, "Stop", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
@@ -204,20 +202,39 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Sets up a listener for the "Skip to End" button.
+     */
     private void setUpForwardToEndListener() {
-        Button button = (Button) findViewById(R.id.button_to_end);
+        ImageButton button = (ImageButton) findViewById(R.id.button_to_end);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    if(mediaPlayer == null)
+                    if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(mediaPlayer.getDuration());
                     Snackbar.make(v, "Reached end", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
+            }
+        });
+    }
+
+    /**
+     * Sets up a listener for the "Change Program" button.
+     */
+    private void setUpChangeProgramListener() {
+        Button button = (Button) findViewById(R.id.button_program);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Snackbar.make(v, "Changed program", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this, ProgramChangeActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -230,9 +247,6 @@ public class MainActivity extends AppCompatActivity {
      * Adapted from: http://stackoverflow.com/a/33292700/1843968
      */
     private void verifyStoragePermissions() {
-        // Check if we have write permission
-        int permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        int permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (!permissionsGranted()) {
             // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(
@@ -245,12 +259,12 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Checks whether the necessary permissions have been granted.
-     * @return
+     * @return true if permissions have been granted.
      */
     private boolean permissionsGranted() {
         int permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         int permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        return permission1 == PackageManager.PERMISSION_DENIED && permission2 == PackageManager.PERMISSION_GRANTED;
+        return permission1 == PackageManager.PERMISSION_GRANTED && permission2 == PackageManager.PERMISSION_GRANTED;
     }
 
 }

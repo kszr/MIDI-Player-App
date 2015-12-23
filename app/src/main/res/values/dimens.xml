@@ -6,4 +6,8 @@
 
     <!-- Text Sizes -->
     <dimen name="h1">50sp</dimen>
+
+    <!-- Padding -->
+    <dimen name="padding">32dp</dimen>
+    <dimen name="padding_small">10dp</dimen>
 </resources>
