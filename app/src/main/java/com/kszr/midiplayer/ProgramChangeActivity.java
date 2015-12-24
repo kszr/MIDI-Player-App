@@ -1,6 +1,5 @@
 package com.kszr.midiplayer;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,10 +9,14 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.kszr.midiplayer.constant.ProgramList;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
+ * An activity that lists available programs.
  * Created by abhishekchatterjee on 12/22/15.
  */
 public class ProgramChangeActivity extends AppCompatActivity {
@@ -31,7 +34,7 @@ public class ProgramChangeActivity extends AppCompatActivity {
     private void setUpProgramList() {
         List<String> programList = getProgramList();
         final ListView listView = (ListView) findViewById(R.id.program_list);
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, programList);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, programList);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> myAdapter, View myView, int myItemInt, long mylng) {
                 String instrument = (String) (listView.getItemAtPosition(myItemInt));
@@ -52,12 +55,10 @@ public class ProgramChangeActivity extends AppCompatActivity {
     }
 
     /**
-     * Return a list of all available program names ordered by their program number.
+     * Returns a list of all available program names ordered by their program number.
      * @return A list of all available program names.
      */
     private List<String> getProgramList() {
-        List<String> programList = new ArrayList<String>();
-        programList.add("Piano");
-        return programList;
+        return new ArrayList<>(Arrays.asList(ProgramList.programList));
     }
 }

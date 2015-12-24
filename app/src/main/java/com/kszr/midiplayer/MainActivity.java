@@ -3,7 +3,6 @@ package com.kszr.midiplayer;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -19,10 +18,9 @@ import android.widget.ImageButton;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 import midi.MidiFile;
 import midi.MidiTrack;
@@ -86,10 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!extension.equals("mid"))
                     throw new Exception("Not a MIDI file!");
                 midiFile = new MidiFile(getContentResolver().openInputStream(data.getData()));
-                mediaPlayer = new MediaPlayer();
-                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mediaPlayer.setDataSource(getApplicationContext(), data.getData());
-                mediaPlayer.prepare();
+                prepareMediaPlayer();
                 Log.i("MainActivity", "Opened " + filepath);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -149,10 +144,6 @@ public class MainActivity extends AppCompatActivity {
                     if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(0);
-                    Snackbar.make(v, "Back to start", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                    Snackbar.make(v, "Playing", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
                 } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -170,8 +161,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     play();
-                    Snackbar.make(v, "Playing", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
                 } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -189,8 +178,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     pause();
-                    Snackbar.make(v, "Paused", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
                 } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -208,8 +195,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     stop();
-                    Snackbar.make(v, "Stop", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
                 } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -229,8 +214,6 @@ public class MainActivity extends AppCompatActivity {
                     if (mediaPlayer == null)
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(mediaPlayer.getDuration());
-                    Snackbar.make(v, "Reached end", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
                 } catch (Exception e) {
                     Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -294,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Changes the instrument of all tracks to that specified by program.
-     * @param program
+     * @param program The program to change to.
      */
     private void changeProgram(int program) throws Exception {
         if(mediaPlayer == null)
@@ -304,27 +287,41 @@ public class MainActivity extends AppCompatActivity {
             pause();
         int currentPosition = mediaPlayer.getCurrentPosition();
         ArrayList<MidiTrack> tracks = midiFile.getTracks();
-        ArrayList<MidiTrack> newTracks = new ArrayList<MidiTrack>();
+        ArrayList<MidiTrack> newTracks = new ArrayList<>();
         for(MidiTrack track : tracks) {
             MidiTrack tempTrack = new MidiTrack();
             tempTrack.insertEvent(new ProgramChange(0, 0, program));
-            for(MidiEvent event : track.getEvents()) {
+            TreeSet<MidiEvent> eventSet = track.getEvents();
+            Iterator iterator = eventSet.iterator();
+            while(iterator.hasNext()) {
+                MidiEvent event = (MidiEvent) iterator.next();
+                if(event.getClass() == ProgramChange.class)
+                    continue;
                 tempTrack.insertEvent(event);
             }
             newTracks.add(tempTrack);
+            System.err.println(tempTrack.getEvents().first().toString());
         }
         midiFile = new MidiFile(midiFile.getResolution(), newTracks);
         mediaPlayer.stop();
         mediaPlayer.reset();
         mediaPlayer.release();
+        prepareMediaPlayer();
+        mediaPlayer.seekTo(currentPosition);
+        if(wasPlaying)
+            play();
+    }
+
+    /**
+     * Loads music from midiFile into mediaPlayer.
+     * @throws Exception
+     */
+    private void prepareMediaPlayer() throws Exception {
         File tempFile = File.createTempFile(midiFile.toString(), ".mid");
         midiFile.writeToFile(tempFile);
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setDataSource(new FileInputStream(tempFile).getFD());
         mediaPlayer.prepare();
-        mediaPlayer.seekTo(currentPosition);
-        if(wasPlaying)
-            play();
     }
 
     /**
