@@ -23,12 +23,14 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeSet;
 
 import midi.MidiFile;
 import midi.MidiTrack;
 import midi.event.MidiEvent;
 import midi.event.ProgramChange;
+import midi.event.meta.EndOfTrack;
 
 /**
  * The main activity for the app.
@@ -197,20 +199,24 @@ public class MainActivity extends AppCompatActivity {
                         mediaPlayer.pause();
                     int currentPosition = mediaPlayer.getCurrentPosition();
                     ArrayList<MidiTrack> tracks = midiFile.getTracks();
-                    ArrayList<MidiTrack> newTracks = new ArrayList<>();
                     for(MidiTrack track : tracks) {
-                        MidiTrack tempTrack = new MidiTrack();
-                        tempTrack.insertEvent(new ProgramChange(0, 0, program));
                         TreeSet<MidiEvent> eventSet = track.getEvents();
-                        for (MidiEvent event : eventSet) {
-                            if (event.getClass() == ProgramChange.class)
-                                continue;
-                            tempTrack.insertEvent(event);
+                        MidiEvent putativeEOT = eventSet.last();
+                        if(putativeEOT.getClass().equals(EndOfTrack.class)) {
+                            track.removeEvent(eventSet.last());
+                            eventSet = track.getEvents();
                         }
-                        newTracks.add(tempTrack);
-                        System.err.println(tempTrack.getEvents().first().toString());
+                        List<MidiEvent> eventsToRemove = new ArrayList<>();
+                        for (MidiEvent event : eventSet)
+                            if (event.getClass().equals(ProgramChange.class))
+                                eventsToRemove.add(event);
+                        for(MidiEvent event : eventsToRemove)
+                            track.removeEvent(event);
+                        track.insertEvent(new ProgramChange(0, 0, program));
+                        track.closeTrack();
+                        System.err.println(track.getEvents().first().toString());
                     }
-                    midiFile = new MidiFile(midiFile.getResolution(), newTracks);
+                    midiFile = new MidiFile(midiFile.getResolution(), tracks);
                     resetMediaPlayer();
                     prepareMediaPlayer();
                     mediaPlayer.seekTo(currentPosition);

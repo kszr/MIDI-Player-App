@@ -271,6 +271,8 @@ public class MidiTrack
             // Either the event was not found in the track,
             // or this is the last event in the track.
             // Either way, we won't need to update any delta times
+            if(E.getClass().equals(EndOfTrack.class))
+                mClosed = false;
             return mEvents.remove(curr);
         }
 
