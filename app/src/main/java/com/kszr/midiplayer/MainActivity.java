@@ -22,10 +22,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.TreeSet;
 
 import midi.MidiFile;
@@ -84,15 +81,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == OPEN_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
-            String filepath = data.getData().getPath();
             String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(data.getData()));
-            Log.i("Filetype", extension);
+            if(extension == null) {
+                Log.i("MainActivity", "File has no extension or invalid extension");
+                Toast.makeText(MainActivity.this, "Not a valid file", Toast.LENGTH_LONG).show();
+                return;
+            } else {
+                Log.i("MainActivity", "File extension: " + extension);
+            }
             try {
                 if (!extension.equals("mid"))
                     throw new Exception("Not a MIDI file!");
-                openMidiFile(data.getData());
+                openMidiFileAsync(data.getData());
                 Toast.makeText(MainActivity.this, "Opened file", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
+                if (e.getMessage().equals("Not a MIDI file!"))
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                else Toast.makeText(MainActivity.this, "Error opening file", Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }
         } else if(requestCode == CHANGE_PROGRAM_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -104,7 +109,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Changed instrument to: " + instrument, Toast.LENGTH_LONG).show();
                     Log.i("MainActivity", "Instrument: " + instrument + ", Program: " + program);
                 } catch(Exception e) {
-                    Log.i("MainActivity", "Error while trying to change program. Program not changed.");
+                    if(e.getMessage().equals("No file loaded!"))
+                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    else Toast.makeText(MainActivity.this, "Error changing program", Toast.LENGTH_LONG).show();
+                    Log.i("MainActivity", "Error while trying to change program.");
                 }
             } else {
                 Log.i("MainActivity", "Program not changed");
@@ -116,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
      * Opens the MIDI file asynchronously and prepares the media player.
      * @param uri
      */
-    private void openMidiFile(final Uri uri) {
+    private void openMidiFileAsync(final Uri uri) {
         new AsyncTask<Void, Void, Integer>() {
             private ProgressDialog dialog;
 
@@ -149,6 +157,78 @@ public class MainActivity extends AppCompatActivity {
 
                 super.onPostExecute(result);
             }
+        }.execute();
+    }
+
+    /**
+     * Changes the instrument of all tracks to that specified by program.
+     * @param program The program to change to.
+     */
+    private void changeProgram(int program) throws Exception {
+        if(mediaPlayer == null)
+            throw new Exception("No file loaded!");
+
+        changeProgramAsync(program);
+    }
+
+    /**
+     * Changes the program asynchronously.
+     * @param program
+     */
+    private void changeProgramAsync(final int program) {
+        new AsyncTask<Object, Object, Integer>() {
+            private ProgressDialog dialog;
+
+            protected void onPreExecute() {
+                super.onPreExecute();
+                dialog = new ProgressDialog(MainActivity.this);
+                dialog.setMessage("Changing program...");
+                dialog.setCancelable(false);
+                dialog.setIndeterminate(false);
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                dialog.show();
+            }
+
+            @Override
+            protected Integer doInBackground(Object... params) {
+                try {
+                    boolean wasPlaying = mediaPlayer.isPlaying();
+                    if(wasPlaying)
+                        mediaPlayer.pause();
+                    int currentPosition = mediaPlayer.getCurrentPosition();
+                    ArrayList<MidiTrack> tracks = midiFile.getTracks();
+                    ArrayList<MidiTrack> newTracks = new ArrayList<>();
+                    for(MidiTrack track : tracks) {
+                        MidiTrack tempTrack = new MidiTrack();
+                        tempTrack.insertEvent(new ProgramChange(0, 0, program));
+                        TreeSet<MidiEvent> eventSet = track.getEvents();
+                        for (MidiEvent event : eventSet) {
+                            if (event.getClass() == ProgramChange.class)
+                                continue;
+                            tempTrack.insertEvent(event);
+                        }
+                        newTracks.add(tempTrack);
+                        System.err.println(tempTrack.getEvents().first().toString());
+                    }
+                    midiFile = new MidiFile(midiFile.getResolution(), newTracks);
+                    resetMediaPlayer();
+                    prepareMediaPlayer();
+                    mediaPlayer.seekTo(currentPosition);
+                    if(wasPlaying)
+                        mediaPlayer.start();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                return 0;
+            }
+
+            protected void onPostExecute(Integer result) {
+                if(dialog != null)
+                    dialog.dismiss();
+
+                super.onPostExecute(result);
+            }
+
         }.execute();
     }
 
@@ -192,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(0);
                 } catch (Exception e) {
-                    Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
@@ -209,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     play();
                 } catch (Exception e) {
-                    Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
@@ -226,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     pause();
                 } catch (Exception e) {
-                    Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
@@ -243,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     stop();
                 } catch (Exception e) {
-                    Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
@@ -262,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(mediaPlayer.getDuration());
                 } catch (Exception e) {
-                    Snackbar.make(v, e.toString(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
@@ -332,78 +412,6 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer.pause();
             Toast.makeText(MainActivity.this, "Stop", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    /**
-     * Changes the instrument of all tracks to that specified by program.
-     * @param program The program to change to.
-     */
-    private void changeProgram(int program) throws Exception {
-        if(mediaPlayer == null)
-            throw new Exception("No file loaded!");
-
-        changeProgramRunnable(program);
-    }
-
-    /**
-     * Changes the program asynchronously.
-     * @param program
-     */
-    private void changeProgramRunnable(final int program) {
-        new AsyncTask<Object, Object, Integer>() {
-            private ProgressDialog dialog;
-
-            protected void onPreExecute() {
-                super.onPreExecute();
-                dialog = new ProgressDialog(MainActivity.this);
-                dialog.setMessage("Changing program...");
-                dialog.setCancelable(false);
-                dialog.setIndeterminate(false);
-                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                dialog.show();
-            }
-
-            @Override
-            protected Integer doInBackground(Object... params) {
-                try {
-                    boolean wasPlaying = mediaPlayer.isPlaying();
-                    if(wasPlaying)
-                        mediaPlayer.pause();
-                    int currentPosition = mediaPlayer.getCurrentPosition();
-                    ArrayList<MidiTrack> tracks = midiFile.getTracks();
-                    ArrayList<MidiTrack> newTracks = new ArrayList<>();
-                    for(MidiTrack track : tracks) {
-                        MidiTrack tempTrack = new MidiTrack();
-                        tempTrack.insertEvent(new ProgramChange(0, 0, program));
-                        TreeSet<MidiEvent> eventSet = track.getEvents();
-                        for (MidiEvent event : eventSet) {
-                            if (event.getClass() == ProgramChange.class)
-                                continue;
-                            tempTrack.insertEvent(event);
-                        }
-                        newTracks.add(tempTrack);
-                        System.err.println(tempTrack.getEvents().first().toString());
-                    }
-                    midiFile = new MidiFile(midiFile.getResolution(), newTracks);
-                    resetMediaPlayer();
-                    prepareMediaPlayer();
-                    mediaPlayer.seekTo(currentPosition);
-                    if(wasPlaying)
-                        mediaPlayer.start();
-                } catch(Exception e) {
-                    e.printStackTrace();
-                }
-                return 0;
-            }
-
-            protected void onPostExecute(Integer result) {
-                if(dialog != null)
-                    dialog.dismiss();
-
-                super.onPostExecute(result);
-            }
-
-        }.execute();
     }
 
     /**
