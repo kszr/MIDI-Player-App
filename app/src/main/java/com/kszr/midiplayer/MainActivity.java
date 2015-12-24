@@ -1,9 +1,12 @@
 package com.kszr.midiplayer;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -15,9 +18,12 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -41,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.INTERNET
     };
 
     @Override
@@ -83,9 +90,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 if (!extension.equals("mid"))
                     throw new Exception("Not a MIDI file!");
-                midiFile = new MidiFile(getContentResolver().openInputStream(data.getData()));
-                prepareMediaPlayer();
-                Log.i("MainActivity", "Opened " + filepath);
+                openMidiFile(data.getData());
+                Toast.makeText(MainActivity.this, "Opened file", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -95,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
             if(instrument != null && program > 0) {
                 try {
                     changeProgram(program);
+                    Toast.makeText(MainActivity.this, "Changed instrument to: " + instrument, Toast.LENGTH_LONG).show();
                     Log.i("MainActivity", "Instrument: " + instrument + ", Program: " + program);
                 } catch(Exception e) {
                     Log.i("MainActivity", "Error while trying to change program. Program not changed.");
@@ -103,6 +110,46 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("MainActivity", "Program not changed");
             }
         }
+    }
+
+    /**
+     * Opens the MIDI file asynchronously and prepares the media player.
+     * @param uri
+     */
+    private void openMidiFile(final Uri uri) {
+        new AsyncTask<Void, Void, Integer>() {
+            private ProgressDialog dialog;
+
+            protected void onPreExecute() {
+                super.onPreExecute();
+                dialog = new ProgressDialog(MainActivity.this);
+                dialog.setMessage("Opening file...");
+                dialog.setCancelable(false);
+                dialog.setIndeterminate(false);
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                dialog.show();
+            }
+
+            @Override
+            protected Integer doInBackground(Void... params) {
+                try {
+                    midiFile = new MidiFile(getContentResolver().openInputStream(uri));
+                    resetMediaPlayer();
+                    prepareMediaPlayer();
+                    Log.i("MainActivity", "Opened " + uri.getPath());
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                return 0;
+            }
+
+            protected void onPostExecute(Integer result) {
+                if(dialog != null)
+                    dialog.dismiss();
+
+                super.onPostExecute(result);
+            }
+        }.execute();
     }
 
     /**
@@ -244,9 +291,14 @@ public class MainActivity extends AppCompatActivity {
     private void play() throws Exception {
         if (mediaPlayer == null)
             throw new Exception("No file loaded!");
-        if(!mediaPlayer.isPlaying())
+        if(!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
-        else mediaPlayer.pause();
+            Toast.makeText(MainActivity.this, "Playing", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            mediaPlayer.pause();
+            Toast.makeText(MainActivity.this, "Paused", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -257,9 +309,14 @@ public class MainActivity extends AppCompatActivity {
     private void pause() throws Exception {
         if (mediaPlayer == null)
             throw new Exception("No file loaded!");
-        if(mediaPlayer.isPlaying())
+        if(mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-        else mediaPlayer.start();
+            Toast.makeText(MainActivity.this, "Paused", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            mediaPlayer.start();
+            Toast.makeText(MainActivity.this, "Playing", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -271,8 +328,10 @@ public class MainActivity extends AppCompatActivity {
         if (mediaPlayer == null)
             throw new Exception("No file loaded!");
         mediaPlayer.seekTo(0);
-        if (mediaPlayer.isPlaying())
+        if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+            Toast.makeText(MainActivity.this, "Stop", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -282,34 +341,81 @@ public class MainActivity extends AppCompatActivity {
     private void changeProgram(int program) throws Exception {
         if(mediaPlayer == null)
             throw new Exception("No file loaded!");
-        boolean wasPlaying = mediaPlayer.isPlaying();
-        if(wasPlaying)
-            pause();
-        int currentPosition = mediaPlayer.getCurrentPosition();
-        ArrayList<MidiTrack> tracks = midiFile.getTracks();
-        ArrayList<MidiTrack> newTracks = new ArrayList<>();
-        for(MidiTrack track : tracks) {
-            MidiTrack tempTrack = new MidiTrack();
-            tempTrack.insertEvent(new ProgramChange(0, 0, program));
-            TreeSet<MidiEvent> eventSet = track.getEvents();
-            Iterator iterator = eventSet.iterator();
-            while(iterator.hasNext()) {
-                MidiEvent event = (MidiEvent) iterator.next();
-                if(event.getClass() == ProgramChange.class)
-                    continue;
-                tempTrack.insertEvent(event);
+
+        changeProgramRunnable(program);
+    }
+
+    /**
+     * Changes the program asynchronously.
+     * @param program
+     */
+    private void changeProgramRunnable(final int program) {
+        new AsyncTask<Object, Object, Integer>() {
+            private ProgressDialog dialog;
+
+            protected void onPreExecute() {
+                super.onPreExecute();
+                dialog = new ProgressDialog(MainActivity.this);
+                dialog.setMessage("Changing program...");
+                dialog.setCancelable(false);
+                dialog.setIndeterminate(false);
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                dialog.show();
             }
-            newTracks.add(tempTrack);
-            System.err.println(tempTrack.getEvents().first().toString());
-        }
-        midiFile = new MidiFile(midiFile.getResolution(), newTracks);
+
+            @Override
+            protected Integer doInBackground(Object... params) {
+                try {
+                    boolean wasPlaying = mediaPlayer.isPlaying();
+                    if(wasPlaying)
+                        mediaPlayer.pause();
+                    int currentPosition = mediaPlayer.getCurrentPosition();
+                    ArrayList<MidiTrack> tracks = midiFile.getTracks();
+                    ArrayList<MidiTrack> newTracks = new ArrayList<>();
+                    for(MidiTrack track : tracks) {
+                        MidiTrack tempTrack = new MidiTrack();
+                        tempTrack.insertEvent(new ProgramChange(0, 0, program));
+                        TreeSet<MidiEvent> eventSet = track.getEvents();
+                        for (MidiEvent event : eventSet) {
+                            if (event.getClass() == ProgramChange.class)
+                                continue;
+                            tempTrack.insertEvent(event);
+                        }
+                        newTracks.add(tempTrack);
+                        System.err.println(tempTrack.getEvents().first().toString());
+                    }
+                    midiFile = new MidiFile(midiFile.getResolution(), newTracks);
+                    resetMediaPlayer();
+                    prepareMediaPlayer();
+                    mediaPlayer.seekTo(currentPosition);
+                    if(wasPlaying)
+                        mediaPlayer.start();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                return 0;
+            }
+
+            protected void onPostExecute(Integer result) {
+                if(dialog != null)
+                    dialog.dismiss();
+
+                super.onPostExecute(result);
+            }
+
+        }.execute();
+    }
+
+    /**
+     * Resets the media player.
+     */
+    private void resetMediaPlayer() {
+        if(mediaPlayer == null)
+            return;
         mediaPlayer.stop();
         mediaPlayer.reset();
         mediaPlayer.release();
-        prepareMediaPlayer();
-        mediaPlayer.seekTo(currentPosition);
-        if(wasPlaying)
-            play();
+        mediaPlayer = null;
     }
 
     /**
@@ -347,9 +453,10 @@ public class MainActivity extends AppCompatActivity {
      * @return true if permissions have been granted.
      */
     private boolean permissionsGranted() {
-        int permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        int permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        return permission1 == PackageManager.PERMISSION_GRANTED && permission2 == PackageManager.PERMISSION_GRANTED;
+        for(String permission : PERMISSIONS_STORAGE)
+            if(ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
+                return false;
+        return true;
     }
 
 }
