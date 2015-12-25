@@ -21,12 +21,13 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.kszr.midiplayer.util.Time;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 
 import midi.MidiFile;
 import midi.MidiTrack;
@@ -45,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
     private MidiFile midiFile = null;
 
     private Handler handler;
-    private Runnable rUpdate;
 
     //Pseudo locks
     private boolean playerIsPrepared = false;
@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Opens the MIDI file asynchronously and prepares the media player.
-     * @param uri
+     * @param uri The Uri of the file that is to be loaded.
      */
     private void openMidiFileAsync(final Uri uri) {
         new AsyncTask<Void, Void, Integer>() {
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Changes the program asynchronously.
-     * @param program
+     * @param program The program number to change to.
      */
     private void changeProgramAsync(final int program) {
         new AsyncTask<Object, Object, Integer>() {
@@ -468,13 +468,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private void setUpHandler() {
         handler = new Handler();
-        rUpdate = new Runnable() {
+        Runnable rUpdate = new Runnable() {
 
             @Override
             public void run() {
                 TextView textView = (TextView) findViewById(R.id.playback_time);
                 String formattedTime = getFormattedPlayBackTime();
-                if(formattedTime != null)
+                if (formattedTime != null)
                     textView.setText(formattedTime);
                 handler.postDelayed(this, 100);
             }
@@ -491,28 +491,10 @@ public class MainActivity extends AppCompatActivity {
         } else if(programIsChanging) {
             return null;
         } else {
-            String duration = millisToString(mediaPlayer.getDuration());
-            String currentPosition = millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
+            String duration = Time.millisToString(mediaPlayer.getDuration());
+            String currentPosition = Time.millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
             return currentPosition + "/" + duration;
         }
-    }
-
-    /**
-     * Formats time in milliseconds to (H...)H:MM:SS or (M)M:SS.
-     * @param millis Time in milliseconds
-     * @return Formatted time
-     */
-    private String millisToString(int millis) {
-        if(millis < 0)
-            throw new IllegalArgumentException("Millis cannot be negative!");
-        long hour = TimeUnit.MILLISECONDS.toHours(millis);
-        long minute = TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(hour);
-        long second = TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.HOURS.toSeconds(hour) - TimeUnit.MINUTES.toSeconds(minute);
-        String s;
-        if(hour == 0)
-            s = String.format("%d:%02d", minute, second);
-        else s = String.format("%d:%02d:%02d", hour, minute, second);
-        return s;
     }
 
     /**
@@ -545,8 +527,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Checks whether a given permission has been granted.
-     * @param permission
-     * @return
+     * @param permission The permission that needs to be verified.
+     * @return True if permission has been granted.
      */
     private boolean permissionGranted(String permission) {
         return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
