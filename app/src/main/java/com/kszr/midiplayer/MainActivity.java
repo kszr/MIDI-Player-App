@@ -47,7 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable rUpdate;
 
+    //Pseudo locks
     private boolean playerIsPrepared = false;
+    private boolean programIsChanging = false;
 
     // App permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -203,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected Integer doInBackground(Object... params) {
                 try {
+                    programIsChanging = true;
                     boolean wasPlaying = mediaPlayer.isPlaying();
                     if (wasPlaying)
                         mediaPlayer.pause();
@@ -211,25 +214,24 @@ public class MainActivity extends AppCompatActivity {
                     for (MidiTrack track : tracks) {
                         TreeSet<MidiEvent> eventSet = track.getEvents();
                         MidiEvent putativeEOT = eventSet.last();
-                        /**
-                         * Need to remove EndOfTrack event for now, because a track is not
-                         * mutable otherwise.
-                         */
+
+                         // Need to remove EndOfTrack event for now, because a track is not
+                         // mutable otherwise.
                         if (putativeEOT.getClass().equals(EndOfTrack.class)) {
                             track.removeEvent(eventSet.last());
                             eventSet = track.getEvents();
                         }
                         List<MidiEvent> eventsToRemove = new ArrayList<>();
-                        /**
-                         * Need to remove any ProgramChange events that might conflict
-                         * with the new ProgramChange.
-                         */
+
+                         // Need to remove any ProgramChange events that might conflict
+                         // with the new ProgramChange.
                         for (MidiEvent event : eventSet)
                             if (event.getClass().equals(ProgramChange.class))
                                 eventsToRemove.add(event);
                         for (MidiEvent event : eventsToRemove)
                             track.removeEvent(event);
                         track.insertEvent(new ProgramChange(0, 0, program));
+
                         //Adding EndOfTrack.
                         track.closeTrack();
                     }
@@ -239,7 +241,9 @@ public class MainActivity extends AppCompatActivity {
                     mediaPlayer.seekTo(currentPosition);
                     if (wasPlaying)
                         mediaPlayer.start();
+                    programIsChanging = false;
                 } catch(Exception e) {
+                    programIsChanging = false;
                     e.printStackTrace();
                 }
                 return 0;
@@ -469,7 +473,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 TextView textView = (TextView) findViewById(R.id.playback_time);
-                textView.setText(getFormattedPlayBackTime());
+                String formattedTime = getFormattedPlayBackTime();
+                if(formattedTime != null)
+                    textView.setText(formattedTime);
                 handler.postDelayed(this, 100);
             }
         };
@@ -480,9 +486,11 @@ public class MainActivity extends AppCompatActivity {
      * Sets the current playback time in the field for playback time.
      */
     private String getFormattedPlayBackTime() {
-        if(!playerIsPrepared) {
+        if(!playerIsPrepared && !programIsChanging) {
             return "0:00/0:00";
-        }  else {
+        } else if(programIsChanging) {
+            return null;
+        } else {
             String duration = millisToString(mediaPlayer.getDuration());
             String currentPosition = millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
             return currentPosition + "/" + duration;
@@ -490,7 +498,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Formats time in milliseconds to HH:MM:SS or MM:SS.
+     * Formats time in milliseconds to (H...)H:MM:SS or (M)M:SS.
      * @param millis Time in milliseconds
      * @return Formatted time
      */
