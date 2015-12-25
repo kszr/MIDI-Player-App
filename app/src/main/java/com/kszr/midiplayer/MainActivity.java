@@ -484,7 +484,7 @@ public class MainActivity extends AppCompatActivity {
             return "0:00/0:00";
         }  else {
             String duration = millisToString(mediaPlayer.getDuration());
-            String currentPosition = millisToString(mediaPlayer.getCurrentPosition());
+            String currentPosition = millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
             return currentPosition + "/" + duration;
         }
     }
