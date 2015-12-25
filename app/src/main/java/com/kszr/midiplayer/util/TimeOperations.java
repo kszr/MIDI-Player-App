@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
  * convert time in milliseconds to (H...)H:MM:SS or (M)M:SS.
  * Created by abhishekchatterjee on 12/25/15.
  */
-public final class Time {
+public final class TimeOperations {
     /**
      * Formats time in milliseconds to (H...)H:MM:SS or (M)M:SS.
      * @param millis Time in milliseconds

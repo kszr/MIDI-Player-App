@@ -21,19 +21,13 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.kszr.midiplayer.util.Time;
+import com.kszr.midiplayer.util.MidiOperations;
+import com.kszr.midiplayer.util.TimeOperations;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeSet;
 
 import midi.MidiFile;
-import midi.MidiTrack;
-import midi.event.MidiEvent;
-import midi.event.ProgramChange;
-import midi.event.meta.EndOfTrack;
 
 /**
  * The main activity for the app.
@@ -210,32 +204,7 @@ public class MainActivity extends AppCompatActivity {
                     if (wasPlaying)
                         mediaPlayer.pause();
                     int currentPosition = mediaPlayer.getCurrentPosition();
-                    ArrayList<MidiTrack> tracks = midiFile.getTracks();
-                    for (MidiTrack track : tracks) {
-                        TreeSet<MidiEvent> eventSet = track.getEvents();
-                        MidiEvent putativeEOT = eventSet.last();
-
-                         // Need to remove EndOfTrack event for now, because a track is not
-                         // mutable otherwise.
-                        if (putativeEOT.getClass().equals(EndOfTrack.class)) {
-                            track.removeEvent(eventSet.last());
-                            eventSet = track.getEvents();
-                        }
-                        List<MidiEvent> eventsToRemove = new ArrayList<>();
-
-                         // Need to remove any ProgramChange events that might conflict
-                         // with the new ProgramChange.
-                        for (MidiEvent event : eventSet)
-                            if (event.getClass().equals(ProgramChange.class))
-                                eventsToRemove.add(event);
-                        for (MidiEvent event : eventsToRemove)
-                            track.removeEvent(event);
-                        track.insertEvent(new ProgramChange(0, 0, program));
-
-                        //Adding EndOfTrack.
-                        track.closeTrack();
-                    }
-                    midiFile = new MidiFile(midiFile.getResolution(), tracks);
+                    MidiOperations.changeProgram(midiFile, program);
                     resetMediaPlayer();
                     prepareMediaPlayer();
                     mediaPlayer.seekTo(currentPosition);
@@ -491,8 +460,8 @@ public class MainActivity extends AppCompatActivity {
         } else if(programIsChanging) {
             return null;
         } else {
-            String duration = Time.millisToString(mediaPlayer.getDuration());
-            String currentPosition = Time.millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
+            String duration = TimeOperations.millisToString(mediaPlayer.getDuration());
+            String currentPosition = TimeOperations.millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
             return currentPosition + "/" + duration;
         }
     }
