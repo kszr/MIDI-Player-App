@@ -18,6 +18,7 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     //Pseudo locks
     private boolean playerIsPrepared = false;
     private boolean programIsChanging = false;
+
+    private Toast universalToast;
 
     // App permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -90,7 +93,8 @@ public class MainActivity extends AppCompatActivity {
             String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(data.getData()));
             if(extension == null) {
                 Log.i("MainActivity", "File has no extension or invalid extension");
-                Toast.makeText(MainActivity.this, "Not a valid file", Toast.LENGTH_LONG).show();
+                universalToast = Toast.makeText(MainActivity.this, "Not a valid file", Toast.LENGTH_LONG);
+                universalToast.show();
                 return;
             } else {
                 Log.i("MainActivity", "File extension: " + extension);
@@ -99,11 +103,14 @@ public class MainActivity extends AppCompatActivity {
                 if (!extension.equals("mid"))
                     throw new Exception("Not a MIDI file!");
                 openMidiFileAsync(data.getData());
-                Toast.makeText(MainActivity.this, "Opened file", Toast.LENGTH_SHORT).show();
+                universalToast = Toast.makeText(MainActivity.this, "Opened file", Toast.LENGTH_SHORT);
+                universalToast.show();
             } catch (Exception e) {
                 if (e.getMessage().equals("Not a MIDI file!"))
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                else Toast.makeText(MainActivity.this, "Error opening file", Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                else
+                    universalToast = Toast.makeText(MainActivity.this, "Error opening file", Toast.LENGTH_LONG);
+                universalToast.show();
                 e.printStackTrace();
             }
         } else if(requestCode == CHANGE_PROGRAM_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -112,18 +119,27 @@ public class MainActivity extends AppCompatActivity {
             if(instrument != null && program > 0) {
                 try {
                     changeProgram(program);
-                    Toast.makeText(MainActivity.this, "Changed instrument to: " + instrument, Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, "Changed instrument to: " + instrument, Toast.LENGTH_LONG);
+                    universalToast.show();
                     Log.i("MainActivity", "Instrument: " + instrument + ", Program: " + program);
                 } catch(Exception e) {
                     if(e.getMessage().equals("No file loaded!"))
-                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                    else Toast.makeText(MainActivity.this, "Error changing instrument", Toast.LENGTH_LONG).show();
+                        universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                    else universalToast = Toast.makeText(MainActivity.this, "Error changing instrument", Toast.LENGTH_LONG);
+                    universalToast.show();
                     Log.i("MainActivity", "Error while trying to change program.");
                 }
             } else {
                 Log.i("MainActivity", "Program not changed");
             }
         }
+    }
+
+    @Override
+    protected void onStop () {
+        if(universalToast != null)
+            universalToast.cancel();
+        super.onStop();
     }
 
     /**
@@ -268,7 +284,8 @@ public class MainActivity extends AppCompatActivity {
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(0);
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                    universalToast.show();
                 }
             }
         });
@@ -284,7 +301,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     play();
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                    universalToast.show();
                 }
             }
         });
@@ -300,7 +318,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     pause();
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                    universalToast.show();
                 }
             }
         });
@@ -316,7 +335,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     stop();
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                    universalToast.show();
                 }
             }
         });
@@ -334,7 +354,8 @@ public class MainActivity extends AppCompatActivity {
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(mediaPlayer.getDuration());
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    universalToast = Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                    universalToast.show();
                 }
             }
         });
@@ -364,12 +385,13 @@ public class MainActivity extends AppCompatActivity {
             throw new Exception("No file loaded!");
         if(!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
-            Toast.makeText(MainActivity.this, "Playing", Toast.LENGTH_SHORT).show();
+            universalToast = Toast.makeText(MainActivity.this, "Playing", Toast.LENGTH_SHORT);
         }
         else {
             mediaPlayer.pause();
-            Toast.makeText(MainActivity.this, "Paused", Toast.LENGTH_SHORT).show();
+            universalToast = Toast.makeText(MainActivity.this, "Paused", Toast.LENGTH_SHORT);
         }
+        universalToast.show();
     }
 
     /**
@@ -382,12 +404,12 @@ public class MainActivity extends AppCompatActivity {
             throw new Exception("No file loaded!");
         if(mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-            Toast.makeText(MainActivity.this, "Paused", Toast.LENGTH_SHORT).show();
-        }
-        else {
+            universalToast = Toast.makeText(MainActivity.this, "Paused", Toast.LENGTH_SHORT);
+        } else {
             mediaPlayer.start();
-            Toast.makeText(MainActivity.this, "Playing", Toast.LENGTH_SHORT).show();
+            universalToast = Toast.makeText(MainActivity.this, "Playing", Toast.LENGTH_SHORT);
         }
+        universalToast.show();
     }
 
     /**
@@ -401,7 +423,8 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.seekTo(0);
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-            Toast.makeText(MainActivity.this, "Stop", Toast.LENGTH_SHORT).show();
+            universalToast = Toast.makeText(MainActivity.this, "Stop", Toast.LENGTH_SHORT);
+            universalToast.show();
         }
     }
 
@@ -442,9 +465,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 TextView textView = (TextView) findViewById(R.id.playback_time);
+                ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+                progressBar.setMax(1000);
+
                 String formattedTime = getFormattedPlayBackTime();
-                if (formattedTime != null)
+                Integer progress = getProgress();
+
+                if (formattedTime != null) {
                     textView.setText(formattedTime);
+                }
+                if(progress != null)
+                    progressBar.setProgress(progress);
                 handler.postDelayed(this, 100);
             }
         };
@@ -464,6 +495,19 @@ public class MainActivity extends AppCompatActivity {
             String currentPosition = TimeOperations.millisToString(Math.min(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
             return currentPosition + "/" + duration;
         }
+    }
+
+    /**
+     * Returns the progress of playback as an Integer between 0 and 1000. Null
+     * during program change.
+     * @return percentage of progress
+     */
+    private Integer getProgress() {
+        if(!playerIsPrepared && !programIsChanging)
+            return 0;
+        else if(programIsChanging)
+            return null;
+        else return (int) ((double) mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration()*1000);
     }
 
     /**

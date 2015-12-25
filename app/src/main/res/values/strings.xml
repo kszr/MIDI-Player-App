@@ -14,4 +14,7 @@
     <string name="button_pause_description">Pause playback</string>
     <string name="button_stop_description">Stop playback</string>
     <string name="button_forward_to_end_description">Go to the end of the track</string>
+
+    <!-- Other strings -->
+    <string name="default_time">0:00/0:00</string>
 </resources>
