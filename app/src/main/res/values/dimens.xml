@@ -5,7 +5,8 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <!-- Text Sizes -->
-    <dimen name="h1">50sp</dimen>
+    <dimen name="h1">56sp</dimen>
+    <dimen name="h3">16sp</dimen>
 
     <!-- Padding -->
     <dimen name="padding">32dp</dimen>

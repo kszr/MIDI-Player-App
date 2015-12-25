@@ -8,6 +8,8 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -25,6 +28,7 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import midi.MidiFile;
 import midi.MidiTrack;
@@ -42,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer = null;
     private MidiFile midiFile = null;
 
+    private Handler handler;
+    private Runnable rUpdate;
+
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -56,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         verifyStoragePermissions();
         setUpButtonListeners();
+        setUpHandler();
     }
 
     @Override
@@ -195,14 +203,14 @@ public class MainActivity extends AppCompatActivity {
             protected Integer doInBackground(Object... params) {
                 try {
                     boolean wasPlaying = mediaPlayer.isPlaying();
-                    if(wasPlaying)
+                    if (wasPlaying)
                         mediaPlayer.pause();
                     int currentPosition = mediaPlayer.getCurrentPosition();
                     ArrayList<MidiTrack> tracks = midiFile.getTracks();
-                    for(MidiTrack track : tracks) {
+                    for (MidiTrack track : tracks) {
                         TreeSet<MidiEvent> eventSet = track.getEvents();
                         MidiEvent putativeEOT = eventSet.last();
-                        if(putativeEOT.getClass().equals(EndOfTrack.class)) {
+                        if (putativeEOT.getClass().equals(EndOfTrack.class)) {
                             track.removeEvent(eventSet.last());
                             eventSet = track.getEvents();
                         }
@@ -210,17 +218,16 @@ public class MainActivity extends AppCompatActivity {
                         for (MidiEvent event : eventSet)
                             if (event.getClass().equals(ProgramChange.class))
                                 eventsToRemove.add(event);
-                        for(MidiEvent event : eventsToRemove)
+                        for (MidiEvent event : eventsToRemove)
                             track.removeEvent(event);
                         track.insertEvent(new ProgramChange(0, 0, program));
                         track.closeTrack();
-                        System.err.println(track.getEvents().first().toString());
                     }
                     midiFile = new MidiFile(midiFile.getResolution(), tracks);
                     resetMediaPlayer();
                     prepareMediaPlayer();
                     mediaPlayer.seekTo(currentPosition);
-                    if(wasPlaying)
+                    if (wasPlaying)
                         mediaPlayer.start();
                 } catch(Exception e) {
                     e.printStackTrace();
@@ -460,6 +467,55 @@ public class MainActivity extends AppCompatActivity {
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+    }
+
+    private void setUpHandler() {
+        handler = new Handler();
+        rUpdate = new Runnable() {
+
+            @Override
+            public void run() {
+                TextView textView = (TextView) findViewById(R.id.playback_time);
+                textView.setText(getFormattedPlayBackTime());
+                handler.postDelayed(this, 100);
+            }
+        };
+        handler.postDelayed(rUpdate, 100);
+    }
+
+    /**
+     * Sets the current playback time in the field for playback time.
+     */
+    private String getFormattedPlayBackTime() {
+        if(mediaPlayer == null) {
+            return "0:00/0:00";
+        }  else try {
+            String duration = millisToString(mediaPlayer.getDuration());
+            String currentPosition = millisToString(mediaPlayer.getCurrentPosition());
+            return currentPosition + "/" + duration;
+        } catch(IllegalStateException e) {
+            return "0:00/0:00";
+        }
+    }
+
+    /**
+     * Formats time in milliseconds to HH:MM:SS or MM:SS.
+     * @param millis Time in milliseconds
+     * @return Formatted time
+     */
+    private String millisToString(int millis) {
+        if(millis < 0)
+            throw new IllegalArgumentException("Millis cannot be negative!");
+        long hour = TimeUnit.MILLISECONDS.toHours(millis);
+        long minute = TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(hour);
+        long second = TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.HOURS.toSeconds(hour) - TimeUnit.MINUTES.toSeconds(minute);
+        String s;
+        if(hour == 0 && minute == 0)
+            s = String.format("0:%02d", second);
+        else if(hour == 0)
+            s = String.format("%d:%02d", minute, second);
+        else s = String.format("%d:%02d:%02d", hour, minute, second);
+        return s;
     }
 
     /**
