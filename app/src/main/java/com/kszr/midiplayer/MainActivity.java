@@ -9,8 +9,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -49,7 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable rUpdate;
 
-    // Storage Permissions
+    private boolean playerIsPrepared = false;
+
+    // App permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        verifyStoragePermissions();
+        verifyPermissions();
         setUpButtonListeners();
         setUpHandler();
     }
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch(Exception e) {
                     if(e.getMessage().equals("No file loaded!"))
                         Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                    else Toast.makeText(MainActivity.this, "Error changing program", Toast.LENGTH_LONG).show();
+                    else Toast.makeText(MainActivity.this, "Error changing instrument", Toast.LENGTH_LONG).show();
                     Log.i("MainActivity", "Error while trying to change program.");
                 }
             } else {
@@ -171,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Changes the instrument of all tracks to that specified by program.
+     * Changes the instrument of all tracks to that specified by program. "Program" is part of
+     * MIDI vocabulary. The word "instrument" will be used exclusively in the front end.
      * @param program The program to change to.
      */
     private void changeProgram(int program) throws Exception {
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             protected void onPreExecute() {
                 super.onPreExecute();
                 dialog = new ProgressDialog(MainActivity.this);
-                dialog.setMessage("Changing program...");
+                dialog.setMessage("Changing instrument...");
                 dialog.setCancelable(false);
                 dialog.setIndeterminate(false);
                 dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -210,17 +211,26 @@ public class MainActivity extends AppCompatActivity {
                     for (MidiTrack track : tracks) {
                         TreeSet<MidiEvent> eventSet = track.getEvents();
                         MidiEvent putativeEOT = eventSet.last();
+                        /**
+                         * Need to remove EndOfTrack event for now, because a track is not
+                         * mutable otherwise.
+                         */
                         if (putativeEOT.getClass().equals(EndOfTrack.class)) {
                             track.removeEvent(eventSet.last());
                             eventSet = track.getEvents();
                         }
                         List<MidiEvent> eventsToRemove = new ArrayList<>();
+                        /**
+                         * Need to remove any ProgramChange events that might conflict
+                         * with the new ProgramChange.
+                         */
                         for (MidiEvent event : eventSet)
                             if (event.getClass().equals(ProgramChange.class))
                                 eventsToRemove.add(event);
                         for (MidiEvent event : eventsToRemove)
                             track.removeEvent(event);
                         track.insertEvent(new ProgramChange(0, 0, program));
+                        //Adding EndOfTrack.
                         track.closeTrack();
                     }
                     midiFile = new MidiFile(midiFile.getResolution(), tracks);
@@ -285,8 +295,7 @@ public class MainActivity extends AppCompatActivity {
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(0);
                 } catch (Exception e) {
-                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -302,8 +311,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     play();
                 } catch (Exception e) {
-                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -319,8 +327,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     pause();
                 } catch (Exception e) {
-                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -336,8 +343,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     stop();
                 } catch (Exception e) {
-                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -355,8 +361,7 @@ public class MainActivity extends AppCompatActivity {
                         throw new Exception("No file loaded!");
                     mediaPlayer.seekTo(mediaPlayer.getDuration());
                 } catch (Exception e) {
-                    Snackbar.make(v, e.getMessage(), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -433,6 +438,7 @@ public class MainActivity extends AppCompatActivity {
     private void resetMediaPlayer() {
         if(mediaPlayer == null)
             return;
+        playerIsPrepared = false;
         mediaPlayer.stop();
         mediaPlayer.reset();
         mediaPlayer.release();
@@ -449,26 +455,13 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setDataSource(new FileInputStream(tempFile).getFD());
         mediaPlayer.prepare();
+        playerIsPrepared = true;
     }
 
     /**
-     * Checks if the app has permission to write to device storage
-     *
-     * If the app does not has permission then the user will be prompted to grant permissions
-     *
-     * Adapted from: http://stackoverflow.com/a/33292700/1843968
+     * Sets up the Handler responsible for handling view updates with regard to
+     * displaying playback time.
      */
-    private void verifyStoragePermissions() {
-        if (!permissionsGranted()) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
-
     private void setUpHandler() {
         handler = new Handler();
         rUpdate = new Runnable() {
@@ -487,14 +480,12 @@ public class MainActivity extends AppCompatActivity {
      * Sets the current playback time in the field for playback time.
      */
     private String getFormattedPlayBackTime() {
-        if(mediaPlayer == null) {
+        if(!playerIsPrepared) {
             return "0:00/0:00";
-        }  else try {
+        }  else {
             String duration = millisToString(mediaPlayer.getDuration());
             String currentPosition = millisToString(mediaPlayer.getCurrentPosition());
             return currentPosition + "/" + duration;
-        } catch(IllegalStateException e) {
-            return "0:00/0:00";
         }
     }
 
@@ -510,23 +501,47 @@ public class MainActivity extends AppCompatActivity {
         long minute = TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(hour);
         long second = TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.HOURS.toSeconds(hour) - TimeUnit.MINUTES.toSeconds(minute);
         String s;
-        if(hour == 0 && minute == 0)
-            s = String.format("0:%02d", second);
-        else if(hour == 0)
+        if(hour == 0)
             s = String.format("%d:%02d", minute, second);
         else s = String.format("%d:%02d:%02d", hour, minute, second);
         return s;
     }
 
     /**
+     * Checks if the app has the necessary permissions to operate. The user will be prompted
+     * to grant these permissions otherwise.
+     *
+     * Adapted from: http://stackoverflow.com/a/33292700/1843968
+     */
+    private void verifyPermissions() {
+        if (!allPermissionsGranted()) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+    /**
      * Checks whether the necessary permissions have been granted.
      * @return true if permissions have been granted.
      */
-    private boolean permissionsGranted() {
+    private boolean allPermissionsGranted() {
         for(String permission : PERMISSIONS_STORAGE)
-            if(ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
+            if(!permissionGranted(permission))
                 return false;
         return true;
+    }
+
+    /**
+     * Checks whether a given permission has been granted.
+     * @param permission
+     * @return
+     */
+    private boolean permissionGranted(String permission) {
+        return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
     }
 
 }

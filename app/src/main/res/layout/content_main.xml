@@ -110,12 +110,11 @@
         android:id="@+id/playback_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/padding_small"
         android:paddingBottom="@dimen/padding_small"
         android:layout_below="@+id/playback_buttons"
         android:layout_centerHorizontal="true"
         android:fontFamily="sans-serif-light"
-        android:textSize="@dimen/h3"
+        android:textSize="@dimen/h2"
         android:text="0:00/0:00"/>
 
     <!-- Miscellaneous Buttons -->
