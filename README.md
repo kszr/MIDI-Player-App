@@ -12,9 +12,9 @@ A MIDI Player app for Android. Android already has the ability to play MIDI file
 
 ##TODO
 * Make the program list searchable, since scrolling through a list of 127 instruments is probably not the most fun thing in the world, especially when time is of the essence.
-* Optimize program changing, if possible.
+* ~~Optimize program changing, if possible.~~
 * Add something in the Settings menu option to make the app look passably professional.
-* Display current progress of playback, measured against the length of the file.
+* ~~Display current progress of playback, measured against the length of the file.~~
 
 ##External Libraries
 * LeffelMania's [MIDI Library](https://github.com/LeffelMania/android-midi-lib), because Android stopped supporting ```javax.sound.midi``` some years ago.
