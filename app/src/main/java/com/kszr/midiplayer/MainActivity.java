@@ -466,20 +466,20 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 TextView textView = (TextView) findViewById(R.id.playback_time);
                 ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_bar);
-                progressBar.setMax(1000);
+                progressBar.setMax(5000);
 
                 String formattedTime = getFormattedPlayBackTime();
-                Integer progress = getProgress();
+                Double progress = getProgress();
 
                 if (formattedTime != null) {
                     textView.setText(formattedTime);
                 }
                 if(progress != null)
-                    progressBar.setProgress(progress);
-                handler.postDelayed(this, 100);
+                    progressBar.setProgress((int) (5000*progress));
+                handler.postDelayed(this, 50);
             }
         };
-        handler.postDelayed(rUpdate, 100);
+        handler.postDelayed(rUpdate, 50);
     }
 
     /**
@@ -498,16 +498,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Returns the progress of playback as an Integer between 0 and 1000. Null
+     * Returns the progress of playback as a fraction of total duration. Null
      * during program change.
      * @return percentage of progress
      */
-    private Integer getProgress() {
+    private Double getProgress() {
         if(!playerIsPrepared && !programIsChanging)
-            return 0;
+            return 0.0;
         else if(programIsChanging)
             return null;
-        else return (int) ((double) mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration()*1000);
+        else return (double) mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration();
     }
 
     /**
