@@ -7,6 +7,7 @@
     <!-- Button Text -->
     <string name="button_open">Open</string>
     <string name="button_program">Change Instrument</string>
+    <string name="button_save">Save</string>
 
     <!-- Content descriptions for ImageButtons -->
     <string name="button_back_to_start_description">Go back to the start of the track</string>

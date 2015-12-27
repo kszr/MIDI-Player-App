@@ -7,7 +7,6 @@ Program changing is implemented in a very specific way: Changing programs change
 ##TODO
 * Make the program list searchable, since scrolling through a list of 128 instruments is probably not the most fun thing in the world, especially when time is of the essence.
 * Add something in the Settings menu option to make the app look passably professional.
-* Implement file saving. Possibly sharing by email.
 
 ##External Libraries
 * LeffelMania's [MIDI Library](https://github.com/LeffelMania/android-midi-lib), because Android stopped supporting ```javax.sound.midi``` some years ago.

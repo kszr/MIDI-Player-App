@@ -2,6 +2,7 @@ package com.kszr.midiplayer;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -27,6 +29,7 @@ import com.kszr.midiplayer.util.TimeOperations;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 
 import midi.MidiFile;
 
@@ -249,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void setUpButtonListeners() {
         setUpFileOpenListener();
+        setUpFileSendListener();
         setUpBackToStartListener();
         setUpPlayListener();
         setUpPauseListener();
@@ -270,6 +274,79 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, OPEN_FILE_REQUEST_CODE);
             }
         });
+    }
+
+    /**
+     * Sets up a listener for the "Send" button.
+     */
+    private void setUpFileSendListener() {
+        FloatingActionButton button = (FloatingActionButton) findViewById(R.id.fab);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (midiFile == null) {
+                    universalToast = Toast.makeText(MainActivity.this, "No files to send!", Toast.LENGTH_LONG);
+                    universalToast.show();
+                    return;
+                }
+                try {
+                    sendFileAsync(MainActivity.this, File.createTempFile(midiFile.toString(), ".mid", getExternalCacheDir()));
+                } catch (IOException e) {
+                    universalToast = Toast.makeText(MainActivity.this, "Error sending file!", Toast.LENGTH_LONG);
+                    universalToast.show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Asynchronously attaches and sends a file.
+     * @param file The file to be sent.
+     */
+    private void sendFileAsync(final Context context, final File file) {
+        new AsyncTask<Void, Void, Boolean>() {
+            private ProgressDialog dialog;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                dialog = new ProgressDialog(MainActivity.this);
+                dialog.setMessage("Preparing attachment...");
+                dialog.setCancelable(false);
+                dialog.setIndeterminate(false);
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                dialog.show();
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                Log.i("MainActivity", "Processing temp MIDI file");
+                try {
+                    midiFile.writeToFile(file);
+                    return true;
+                } catch(IOException e) {
+                    return false;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Boolean success) {
+                if(dialog != null)
+                    dialog.dismiss();
+
+                if(success) {
+                    Log.i("MainActivity", "Successfully processed temp MIDI file");
+                    Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                    sendIntent.setType("message/rfc822");
+                    sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out this awesome song");
+                    sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Made with MIDI Player");
+                    context.startActivity(Intent.createChooser(sendIntent, "Share this song"));
+                } else {
+                    universalToast = Toast.makeText(MainActivity.this, "Error sending file!", Toast.LENGTH_LONG);
+                    universalToast.show();
+                }
+            }
+        }.execute();
     }
 
     /**
@@ -446,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
      * @throws Exception
      */
     private void prepareMediaPlayer() throws Exception {
-        File tempFile = File.createTempFile(midiFile.toString(), ".mid");
+        File tempFile = File.createTempFile(midiFile.toString(), ".mid", getExternalCacheDir());
         midiFile.writeToFile(tempFile);
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setDataSource(new FileInputStream(tempFile).getFD());
