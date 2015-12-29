@@ -23,7 +23,8 @@
         </activity>
         <activity
             android:name=".ProgramChangeActivity"
-            android:label="@string/program_change_activity">
+            android:label="@string/program_change_activity"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
