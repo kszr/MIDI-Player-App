@@ -93,7 +93,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == OPEN_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
-            String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(data.getData()));
+            String type = getContentResolver().getType(data.getData());
+            String extension = null;
+            try {
+                extension = type.substring(type.lastIndexOf('/') + 1, type.length());
+            } catch(Exception e) {
+                Log.i("MainActivity", "No MimeType found");
+                e.printStackTrace();
+            }
             if(extension == null) {
                 Log.i("MainActivity", "File has no extension or invalid extension");
                 makeToast("Not a valid file", Toast.LENGTH_LONG);
